@@ -42,30 +42,6 @@ The system leverages Python for backend processes, including scheduling tasks fo
 ### Scheduling
 - Token updates and utilization checks are scheduled to run at regular intervals (every hour for token updates and every 30 minutes for utilization checks).
 
-## Installation and Usage
-
-### Requirements
-- Python 3.x
-- Requests library
-- Access to a Prometheus server monitoring GPU utilization
-
-### Setup
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/gpu-resource-pool-management.git
-   ```
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Configure your Prometheus server details in the script.
-
-### Running the System
-Execute the main script to start the scheduling and monitoring processes:
-```
-python manage.py
-```
-
 ## Contributing
 Contributions to the GPU Resource Pool Management System are welcome. Please fork the repository, make your changes, and submit a pull request for review.
 
