@@ -39,7 +39,7 @@ token_max = 100
 # 最小token数量
 token_min = -10
 # 触发清理时的GPU平均占用率
-buzy_trigger_percent = 40
+buzy_trigger_percent = 60
 # 执行统计和清理的时间间隔
 update_token_interval = 3600  # 令牌更新间隔为 1 小时
 
@@ -106,7 +106,6 @@ def update_usage_and_tokens():
     users = OrderedDict(sorted(users.items(), key=lambda x: x[1]["token_balance"]))
     save_tokens(users)
     logging.info(f"Updated Users Tokens: {users}")
-    scheduler.enter(update_token_interval, 1, update_usage_and_tokens)
 
 
 def check_gpu_utilization_busy():
@@ -154,6 +153,8 @@ def kill_user_process(user_name):
         exec_remote(
             targer, "pkill -u {}".format(user_name), sudo=True
         )  # Kill all processes for user
+        # sleep 10 seconds
+        time.sleep(10)
 
 
 def main_loop():
