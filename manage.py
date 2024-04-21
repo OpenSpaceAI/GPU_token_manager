@@ -202,19 +202,9 @@ def set_zssd_size(info):
 if __name__ == '__main__':
     REAL_EXEC = True
     SUDO_PASSWORD = input('Enter the sudo password: ')
+    user_passwd = input('Enter the user password: ')
     user_info_dict = read_user_info()
-    # The user:ayb        cjh  czx      dyw  lifanwu     ljh  lxin  monsoon   qbq  szy  wqj  xuechen   zhuyu  zzr
-    # baorunhui  clx  dataset  gy   linxiao     ll   lxj   monsoon2  rh   txj  wx   ydw       zrj
-    # blb0607    cs   djc      jh   liuls       lns  lyl   myc       shy  tyy  wy   ywf       zsn
-    # changwj    cyh  dtl      jkz  lizhaoyang  lw   lyz   public    sr   wcx  xgx  yxt       zy
-    # chz        cyj  dyl      lhk  lizhuoyuan  lwk  mhy   pyw       szx  wjm  xj   zhayixin  zyq
-    # _username = [
-    #     'ayb', 'cjh', 'czx', 'dyw', 'lifanwu', 'ljh', 'lxin', 'monsoon', 'qbq', 'szy', 'wqj', 'xuechen', 'zhuyu', 'zzr',
-    #     'baorunhui', 'clx', 'gy', 'linxiao', 'll', 'lxj', 'rh', 'txj', 'wx', 'ydw', 'zrj',
-    #     'cs', 'djc', 'jh', 'liuls', 'lns', 'lyl', 'myc', 'shy', 'tyy', 'wy', 'ywf', 'zsn',
-    #     'changwj', 'cyh', 'dtl', 'jkz', 'lizhaoyang', 'lw', 'lyz', 'sr', 'wcx', 'xgx', 'yxt', 'zy',
-    #     'chz', 'cyj', 'dyl', 'lhk', 'lizhuoyuan', 'lwk', 'mhy', 'pyw', 'szx', 'wjm', 'xj', 'zhayixin', 'zyq',
-    # ]
+
     _username = input('Enter the username: ')
     _target = input('Enter the target server: ')
     REAL_EXEC = input('Real execution? (y/n)') == 'y'
