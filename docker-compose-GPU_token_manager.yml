@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  user_token_manager:
+    image: python:3.8
+    container_name: user_token_manager_container
+    volumes:
+      - /zssd/user_token_manager:/zssd/user_token_manager
+      - /zssd/lifanwu/server_manage/GPU_manager:/app
+    working_dir: /app
+    command: >
+      bash -c "
+      pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple && 
+      python GPU_token_manager.py"
+    network_mode: "host"
