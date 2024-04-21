@@ -16,8 +16,8 @@ logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(message)s",
 )
 
-# 资源价格
-price_3090 = 0.0000005
+# 资源价格,单位：token/（GB*hour）
+price_3090 = 0.03
 # 服务器和查询设置
 token_price = {
     "hf-217": 0,
@@ -84,11 +84,11 @@ def update_usage_and_tokens():
 
             total_cost = 0
             for value in series["values"]:
-                # usage的单位是MiB，token_price的单位是token/（MiB*hour*60）
                 usage = float(value[1])
                 cost = usage * token_price[host_name]
                 total_cost += cost
-
+            # total_cost的单位是token/（MiB*hour*60）,要转化成token/（GB*hour）
+            total_cost = total_cost/(1024*60)
             new_balance = users[user_name]["token_balance"] - total_cost
             users[user_name]["token_balance"] = max(
                 token_min, min(new_balance, token_max)

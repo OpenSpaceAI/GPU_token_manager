@@ -94,7 +94,8 @@ def is_hf_server(target: str):
     return target.startswith('hf') or target.startswith('a6000')
 
 def is_user_existing(target: str, username: str):
-    return exec_remote(target, f'cat /etc/passwd | cut -d : -f 1 | grep {username} | wc -l') == '1\n'
+    result = exec_remote(target, f'cat /etc/passwd | cut -d : -f 1 | grep {username} | wc -l')
+    return result == '1\n' or result == '2\n'
 
 
 def set_password(target: str, username: str, password: str):
