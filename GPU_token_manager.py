@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 # 资源价格,单位：token/（GB*hour）
-price_3090 = 0.03
+price_3090 = 0.025
 # 服务器和查询设置
 token_price = {
     "hf-217": 0,
@@ -27,10 +27,10 @@ token_price = {
     "hf-3090-4": price_3090,
     "hf-3090-5": price_3090,
     "bj-2080": 0,
-    "bj-v100": 2 * price_3090,
+    "bj-v100": 1.5 * price_3090,
     "bj-rtx": 0,
     "bj-3090": price_3090,
-    "a6000-1": 4 * price_3090,
+    "a6000-1": 2 * price_3090,
 }
 # 每小时获取token数量
 grant_tokens = 1
@@ -88,13 +88,13 @@ def update_usage_and_tokens():
                 cost = usage * token_price[host_name]
                 total_cost += cost
             # total_cost的单位是token/（MiB*hour*60）,要转化成token/（GB*hour）
-            total_cost = total_cost/(1024*60)
+            total_cost = total_cost / (1024 * 60)
             new_balance = users[user_name]["token_balance"] - total_cost
             users[user_name]["token_balance"] = max(
                 token_min, min(new_balance, token_max)
             )
             logging.info(
-                f"Updated Token Balance for {user_name}: {users[user_name]['token_balance']}, Usage: {usage}, Cost: {total_cost}"
+                f"Updated Token Balance for {user_name}: {users[user_name]['token_balance']}, GPU:{host_name}, Usage: {usage}, Cost: {total_cost}"
             )
 
     # 为每位用户每update_token_interval提供grant_tokens点令牌数量
@@ -117,13 +117,16 @@ def check_gpu_utilization_busy():
     data = query_prometheus("http://10.1.1.1:9091/api/v1/query", params)
     if data["status"] == "success" and data["data"]["result"]:
         percent = 0
+        server_num = 0
         for result in data["data"]["result"]:
             host_name = result["metric"]["hostname"]
             # We do not count the 2080 and rtx card for price and usage summary
             if host_name == "hf-217" or host_name == "bj-rtx" or host_name == "bj-2080":
                 continue
+            logging.info(f"GPU Utilization for {host_name}: {result['value'][1]}%")
             percent += float(result["value"][1])
-        average_usage = percent / len(data["data"]["result"])
+            server_num += 1
+        average_usage = percent / server_num
         logging.info(f"Average GPU Utilization: {average_usage}%")
         if (
             average_usage > buzy_trigger_percent
@@ -142,6 +145,7 @@ def clean_up():
             logging.info(f"Clearing processes for user {user_name} due to delinquency.")
             kill_user_process(user_name)
         if check_gpu_utilization_busy() == False:
+            logging.info("GPU is no longer busy. Stopping cleanup.")
             # If GPU is no longer busy, stop cleaning up
             break
 
@@ -150,14 +154,18 @@ def kill_user_process(user_name):
     logging.info(f"Killing processes for user {user_name}")
     # Method to kill processes associated with a user
     for targer in HOST_LIST:
-        exec_remote(
+        logging.info(f"Killing processes for user {user_name} on {targer}")
+        result = exec_remote(
             targer, "pkill -u {}".format(user_name), sudo=True
         )  # Kill all processes for user
+        logging.info(f"Result: {result}")
         # sleep 10 seconds
         time.sleep(10)
 
 
 def main_loop():
+    # test kill
+    # kill_user_process('cs')
     update_usage_and_tokens()
     if check_gpu_utilization_busy():
         clean_up()
@@ -174,5 +182,5 @@ def start_scheduling():
 
 
 if __name__ == "__main__":
-    REAL_EXEC = False
+    REAL_EXEC = True
     start_scheduling()

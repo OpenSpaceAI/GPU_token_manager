@@ -7,22 +7,20 @@ import getpass
 
 XLSX_PATH = 'user.xlsx'
 SUDO_PASSWORD = ''
-user_passwd = ''
+user_passwd = 
 HOST_LIST = {
-    'hf-217': '10.1.91.1',
-    'hf-3090-1': '10.1.92.1',
-    'hf-3090-2': '10.1.92.2',
-    'hf-3090-3': '10.1.92.3',
-    'hf-3090-4': '10.1.92.4',
-    'hf-3090-5': '10.1.92.5',
-    'bj-2080': '10.1.93.1',
-    'bj-v100': '10.1.93.2',
+    'hf-3090-1': '192.168.1.11',
+    'hf-3090-2': '192.168.1.12',
+    'hf-3090-3': '192.168.1.13',
+    'hf-3090-4': '192.168.1.14',
+    'hf-3090-5': '192.168.1.15',
+    'a6000-1': '192.168.1.31',
     'bj-rtx': '10.1.93.3',
+    'bj-v100': '10.1.93.2',
     'bj-3090': '10.1.94.1',
-    'a6000-1': '10.1.95.1',
 }
 
-REAL_EXEC = False
+REAL_EXEC = True
 
 def exec(bash_script: str, sudo=False) -> str:
     if sudo:
@@ -31,7 +29,7 @@ def exec(bash_script: str, sudo=False) -> str:
         cmd_to_exec_ssh = f"bash -c '{bash_script}'"
 
     if REAL_EXEC:
-        logging.debug(f"Executing: {cmd_to_exec_ssh}")
+        logging.info(f"Executing: {cmd_to_exec_ssh}")
         os.system(cmd_to_exec_ssh)
         return os.popen(cmd_to_exec_ssh).read()
     else:
@@ -46,12 +44,12 @@ def exec_remote(target: str, bash_script: str, sudo=False) -> str:
     else:
         target_ip = target
     if sudo:
-        cmd_to_exec_ssh = f"ssh -i /home/wusar/.ssh/lifanwu_ed25519 lifanwu@{target_ip} \"echo user_passwd | sudo -S bash -c '{bash_script}'\""
+        cmd_to_exec_ssh = f"ssh -i /root/.ssh/lifanwu_ed25519 -o StrictHostKeyChecking=no lifanwu@{target_ip} \"echo {user_passwd} | sudo -S bash -c '{bash_script}'\""
     else:
-        cmd_to_exec_ssh = f"ssh -i /home/wusar/.ssh/lifanwu_ed25519 lifanwu@{target_ip} \"bash -c '{bash_script}'\""
+        cmd_to_exec_ssh = f"ssh -i /root/.ssh/lifanwu_ed25519 -o StrictHostKeyChecking=no lifanwu@{target_ip} \"bash -c '{bash_script}'\""
 
     if REAL_EXEC:
-        logging.debug(f"Executing: {cmd_to_exec_ssh}")
+        logging.info(f"Executing: {cmd_to_exec_ssh}")
         os.system(cmd_to_exec_ssh)
         return os.popen(cmd_to_exec_ssh).read()
     else:
@@ -203,18 +201,7 @@ if __name__ == '__main__':
     REAL_EXEC = True
     SUDO_PASSWORD = input('Enter the sudo password: ')
     user_info_dict = read_user_info()
-    # The user:ayb        cjh  czx      dyw  lifanwu     ljh  lxin  monsoon   qbq  szy  wqj  xuechen   zhuyu  zzr
-    # baorunhui  clx  dataset  gy   linxiao     ll   lxj   monsoon2  rh   txj  wx   ydw       zrj
-    # blb0607    cs   djc      jh   liuls       lns  lyl   myc       shy  tyy  wy   ywf       zsn
-    # changwj    cyh  dtl      jkz  lizhaoyang  lw   lyz   public    sr   wcx  xgx  yxt       zy
-    # chz        cyj  dyl      lhk  lizhuoyuan  lwk  mhy   pyw       szx  wjm  xj   zhayixin  zyq
-    # _username = [
-    #     'ayb', 'cjh', 'czx', 'dyw', 'lifanwu', 'ljh', 'lxin', 'monsoon', 'qbq', 'szy', 'wqj', 'xuechen', 'zhuyu', 'zzr',
-    #     'baorunhui', 'clx', 'gy', 'linxiao', 'll', 'lxj', 'rh', 'txj', 'wx', 'ydw', 'zrj',
-    #     'cs', 'djc', 'jh', 'liuls', 'lns', 'lyl', 'myc', 'shy', 'tyy', 'wy', 'ywf', 'zsn',
-    #     'changwj', 'cyh', 'dtl', 'jkz', 'lizhaoyang', 'lw', 'lyz', 'sr', 'wcx', 'xgx', 'yxt', 'zy',
-    #     'chz', 'cyj', 'dyl', 'lhk', 'lizhuoyuan', 'lwk', 'mhy', 'pyw', 'szx', 'wjm', 'xj', 'zhayixin', 'zyq',
-    # ]
+
     _username = input('Enter the username: ')
     _target = input('Enter the target server: ')
     REAL_EXEC = input('Real execution? (y/n)') == 'y'

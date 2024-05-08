@@ -7,6 +7,7 @@ services:
     volumes:
       - /zssd/user_token_manager:/zssd/user_token_manager
       - /zssd/lifanwu/server_manage/GPU_manager:/app
+      - /zssd/lifanwu/.ssh:/root/.ssh
     working_dir: /app
     command: >
       bash -c "
