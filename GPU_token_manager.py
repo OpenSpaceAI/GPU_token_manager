@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 # 资源价格,单位：token/（GB*hour）
-price_3090 = 0.025
+price_3090 = 0.015
 # 服务器和查询设置
 token_price = {
     "hf-217": 0,
@@ -27,10 +27,10 @@ token_price = {
     "hf-3090-4": price_3090,
     "hf-3090-5": price_3090,
     "bj-2080": 0,
-    "bj-v100": 1.5 * price_3090,
+    "bj-v100": 1.25 * price_3090,
     "bj-rtx": 0,
     "bj-3090": price_3090,
-    "a6000-1": 2 * price_3090,
+    "a6000-1": 1.5 * price_3090,
 }
 # 每小时获取token数量
 grant_tokens = 1
@@ -39,7 +39,7 @@ token_max = 100
 # 最小token数量
 token_min = -10
 # 触发清理时的GPU平均占用率
-buzy_trigger_percent = 60
+buzy_trigger_percent = 65
 # 执行统计和清理的时间间隔
 update_token_interval = 3600  # 令牌更新间隔为 1 小时
 
