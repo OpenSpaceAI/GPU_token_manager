@@ -20,17 +20,17 @@ logging.basicConfig(
 price_3090 = 0.015
 # 服务器和查询设置
 token_price = {
-    "hf-217": 0,
     "hf-3090-1": price_3090,
     "hf-3090-2": price_3090,
     "hf-3090-3": price_3090,
     "hf-3090-4": price_3090,
     "hf-3090-5": price_3090,
-    "bj-2080": 0,
-    "bj-v100": 1.25 * price_3090,
+    "hf-3090-6": price_3090,
+    "hf-3090-7": price_3090,
+    "bj-v100": price_3090,
     "bj-rtx": 0,
     "bj-3090": price_3090,
-    "a6000-1": 1.5 * price_3090,
+    "hf-a6000-1": 1.25 * price_3090,
 }
 # 每小时获取token数量
 grant_tokens = 1
@@ -44,8 +44,9 @@ buzy_trigger_percent = 65
 update_token_interval = 3600  # 令牌更新间隔为 1 小时
 
 token_file = "/zssd/user_token_manager/users_tokens.json"  # 假设的用户数据和令牌数量存储在 JSON 文件中
+black_house_file = "/zssd/user_token_manager/black_house.json"  # 被禁用的用户
 scheduler = sched.scheduler(time.time, time.sleep)
-
+black_list_max_num = 3
 
 def load_tokens():
     try:
@@ -58,6 +59,17 @@ def load_tokens():
 def save_tokens(users):
     with open(token_file, "w") as file:
         json.dump(users, file)
+
+def get_black_list():
+    try:
+        with open(black_house_file, "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return []
+
+def save_black_list(black_list):
+    with open(black_house_file, "w") as file:
+        json.dump(black_list, file)
 
 
 def query_prometheus(url, params):
@@ -143,11 +155,11 @@ def clean_up():
     for user_name, user_info in users.items():
         if user_info["token_balance"] < 0:
             logging.info(f"Clearing processes for user {user_name} due to delinquency.")
-            kill_user_process(user_name)
-        if check_gpu_utilization_busy() == False:
-            logging.info("GPU is no longer busy. Stopping cleanup.")
-            # If GPU is no longer busy, stop cleaning up
-            break
+            disable_user_gpu_usage(user_name)
+            if check_gpu_utilization_busy() == False:
+                logging.info("GPU is no longer busy. Stopping cleanup.")
+                # If GPU is no longer busy, stop cleaning up
+                break
 
 
 def kill_user_process(user_name):
@@ -162,13 +174,62 @@ def kill_user_process(user_name):
         # sleep 10 seconds
         time.sleep(10)
 
+def disable_user_gpu_usage(user_name):
+    black_list = get_black_list()
+    if len(black_list) >= black_list_max_num:
+        logging.warning(f"Blacklist is full. We don't disable GPU for user {user_name}")
+        return
+    logging.info(f"Disabling GPU for user {user_name}")
+    # Method to disable GPU for a user
+    for targer in HOST_LIST:
+        logging.info(f"Disabling GPU for user {user_name} on {targer}")
+        result = exec_remote(
+            targer, "setfacl -m u:{}:--- /dev/nvidia*".format(user_name), sudo=True
+        )  # Disable GPU for user
+        logging.info(f"Result: {result}")
+        # sleep 10 seconds
+        # time.sleep(10)
+    # Add user to the blacklist
+    black_list.append(user_name)
+    save_black_list(black_list)
 
+def enable_user_gpu_usage(user_name):
+    logging.info(f"Enabling GPU for user {user_name}")
+    # Method to enable GPU for a user
+    for targer in HOST_LIST:
+        logging.info(f"Enabling GPU for user {user_name} on {targer}")
+        result = exec_remote(
+            targer, "setfacl -x u:{} /dev/nvidia*".format(user_name), sudo=True
+        )  # Enable GPU for user
+        logging.info(f"Result: {result}")
+        # sleep 10 seconds
+        time.sleep(10)
+    # Remove user from the blacklist
+    black_list = get_black_list()
+    if user_name in black_list:
+        black_list.remove(user_name)
+        save_black_list(black_list)
+
+def free_users():
+    logging.info("Freeing users from the blacklist")
+    users = load_tokens()
+    black_list = get_black_list()
+    for user_name in black_list:
+        # if the user in the blacklist have recovered the token balance, free the user
+        if user_name in users and users[user_name]["token_balance"] >= 30:
+            logging.info(f"Freeing user {user_name}")
+            enable_user_gpu_usage(user_name)
+  
 def main_loop():
     # test kill
     # kill_user_process('cs')
+    # enable_user_gpu_usage('cyj')
     update_usage_and_tokens()
-    if check_gpu_utilization_busy():
-        clean_up()
+    black_list = get_black_list()
+    if len(black_list) <= black_list_max_num:
+        if check_gpu_utilization_busy():
+            clean_up()
+    free_users()
     scheduler.enter(
         update_token_interval, 1, main_loop
     )  # Re-schedule this function to run every 30 minutes
@@ -182,5 +243,4 @@ def start_scheduling():
 
 
 if __name__ == "__main__":
-    REAL_EXEC = True
     start_scheduling()
