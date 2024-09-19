@@ -183,12 +183,16 @@ def disable_user_gpu_usage(user_name):
     # Method to disable GPU for a user
     for targer in HOST_LIST:
         logging.info(f"Disabling GPU for user {user_name} on {targer}")
-        result = exec_remote(
-            targer, "setfacl -m u:{}:--- /dev/nvidia*".format(user_name), sudo=True
-        )  # Disable GPU for user
-        logging.info(f"Result: {result}")
-        # sleep 10 seconds
-        # time.sleep(10)
+        for gpu_id in range(8):
+            result = exec_remote(
+                targer, "setfacl -m u:{}:--- /dev/nvidia{}".format(user_name, gpu_id), sudo=True
+            )  # Disable GPU for user
+            logging.info(f"Result: {result}")
+        # enable GPU for user hf-a6000-1 on card 0
+        if targer == "hf-a6000-1":
+            exec_remote(
+                targer, "setfacl -x u:{} /dev/nvidia0".format(user_name), sudo=True
+            )  # Disable GPU for user
     # Add user to the blacklist
     black_list.append(user_name)
     save_black_list(black_list)
