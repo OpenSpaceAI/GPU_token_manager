@@ -25,11 +25,11 @@ token_price = {
     "hf-3090-3": price_3090,
     "hf-3090-4": price_3090,
     "hf-3090-5": price_3090,
-    "hf-3090-6": price_3090,
-    "hf-3090-7": price_3090,
-    "bj-v100": price_3090,
-    "bj-rtx": 0,
-    "bj-3090": price_3090,
+    # "hf-3090-6": price_3090,
+    # "hf-3090-7": price_3090,
+    # "bj-v100": price_3090,
+    # "bj-rtx": 0,
+    # "bj-3090": price_3090,
     "hf-a6000-1": 1.25 * price_3090,
 }
 # 每小时获取token数量
@@ -39,7 +39,7 @@ token_max = 100
 # 最小token数量
 token_min = -10
 # 触发清理时的GPU平均占用率
-buzy_trigger_percent = 65
+buzy_trigger_percent = 55
 # 执行统计和清理的时间间隔
 update_token_interval = 3600  # 令牌更新间隔为 1 小时
 
@@ -93,6 +93,9 @@ def update_usage_and_tokens():
             user_name = series["metric"]["dimension"]
             if user_name not in users:
                 users[user_name] = {"token_balance": 100}
+            
+            if host_name not in token_price:
+                continue
 
             total_cost = 0
             for value in series["values"]:
@@ -178,6 +181,9 @@ def disable_user_gpu_usage(user_name):
     black_list = get_black_list()
     if len(black_list) >= black_list_max_num:
         logging.warning(f"Blacklist is full. We don't disable GPU for user {user_name}")
+        return
+    if user_name in black_list:
+        logging.warning(f"User {user_name} is already in the blacklist")
         return
     logging.info(f"Disabling GPU for user {user_name}")
     # Method to disable GPU for a user
